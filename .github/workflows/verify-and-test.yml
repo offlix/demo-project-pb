@@ -1,0 +1,40 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Policy & Guard Exist
+        run: |
+          if [ ! -f "AGENTS.md" ]; then
+            echo "::error::AGENTS.md is missing!"
+            exit 1
+          fi
+          if [ ! -f "src/main/java/com/offlix/pbx_dmo/guard/DevPolicyGuard.java" ]; then
+            echo "::error::DevPolicyGuard.java cannot be removed!"
+            exit 1
+          fi
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      - name: Run Maven Tests
+        run: ./mvnw test --no-transfer-progress
